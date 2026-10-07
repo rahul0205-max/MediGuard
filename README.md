@@ -42,8 +42,5 @@ MediGuard Senior Care is a mobile-first, AI-driven healthcare web application de
 ├── app.py                  # Backend server (Flask/FastAPI endpoints)
 ├── templates/
 │   └── index.html          # Mobile-optimized single-page web interface
-├── static/
-│   ├── css/                # Optional external stylesheets
-│   └── js/                 # Client-side scripts (if split)
 ├── requirements.txt        # Python dependencies
 └── README.md               # Project documentation
