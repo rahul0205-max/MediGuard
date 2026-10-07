@@ -83,11 +83,11 @@ def narrator_greeting():
         Pending Medicines Today: {json.dumps(pending_meds)}
 
         Instructions:
-        1. Speak warmly in simple, clear, and reassuring tone for senior citizens.
+        1. Speak warmly in a simple, clear, and reassuring tone for senior citizens.
         2. Deliver the response strictly in {language}.
         3. Greet {patient_name} immediately on app load.
         4. Briefly state completed pills vs pending pills with time & food context.
-        5. Warn if any severe clash exists (e.g. Warfarin and Cranberry Juice).
+        5. Warn if any severe clash exists (e.g., Warfarin and Cranberry Juice).
         6. End by assuring them that you are listening and navigating with them continuously.
         7. Keep response to 2-3 short sentences max for immediate TTS reading.
         """
@@ -220,12 +220,14 @@ def check_interactions():
         if not medicines or len(medicines) < 2:
             return jsonify({
                 "success": True, 
-                "risk_status": "Safe",
-                "interactions": []
+                "data": {
+                    "risk_status": "Safe",
+                    "interactions": []
+                }
             })
 
         found_interactions = []
-        med_names_lower = [m.lower() for m in medicines]
+        med_names_lower = [str(m).lower() for m in medicines]
 
         for item in KNOWN_INTERACTIONS_GRAPH:
             target_1, target_2 = item["pair"][0], item["pair"][1]
@@ -248,7 +250,7 @@ def check_interactions():
 
             Return strictly a JSON object with this exact structure:
             {{
-              "risk_status": "Severe / Caution / Safe",
+              "risk_status": "Severe Risk / Caution / Safe",
               "interactions": [
                  {{
                     "pair": "Drug A + Drug B or Food",
