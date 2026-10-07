@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PolySafe Senior Care - Health Companion & Interaction Graph</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800;900&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #FAF8F5;
+            color: #1E293B;
+            scroll-behavior: smooth;
+        }
+
+        .senior-card {
+            background: #FFFFFF;
+            border: 2px solid #E2E8F0;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+            border-radius: 1.5rem;
+        }
+
+        @keyframes alertGlow {
+            0%, 100% { border-color: #EF4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3); }
+            50% { border-color: #B91C1C; box-shadow: 0 0 25px rgba(185, 28, 28, 0.6); }
+        }
+
+        .high-alert-card {
+            animation: alertGlow 2s infinite ease-in-out;
+            background: #FEF2F2;
+            border: 4px solid #EF4444;
+        }
+
+        .chat-bubble-bot {
+            background-color: #F0FDF4;
+            border: 1.5px solid #BBF7D0;
+            color: #166534;
+        }
+
+        .chat-bubble-user {
+            background-color: #EFF6FF;
+            border: 1.5px solid #BFDBFE;
+            color: #1E40AF;
+        }
+
+        #floatingChatBtn {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        #floatingChatBtn.hidden-float {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(20px);
+        }
+
+        #menuDrawer {
+            transition: transform 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between relative overflow-x-hidden">
+
+    <!-- ==================== HEADER ==================== -->
+    <header class="bg-white border-b-2 border-slate-200 sticky top-0 z-40 px-4 py-3 sm:px-8">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+            
+            <div class="flex items-center gap-3">
+                <button onclick="toggleMenu()" class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-2xl transition border-2 border-slate-300" title="Open Menu">
+                    <i data-lucide="menu" class="w-7 h-7"></i>
+                </button>
+
+                <div class="w-11 h-11 bg-amber-500 rounded-2xl flex items-center justify-center text-white shadow-md">
+                    <i data-lucide="heart-handshake" class="w-7 h-7"></i>
+                </div>
+                <div>
+                    <h1 id="appTitle" class="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">PolySafe Care</h1>
+                    <p id="appSubtitle" class="text-xs sm:text-sm font-bold text-slate-500">Your Personal Voice Health Companion</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-4">
+                <!-- 2 Languages Selector -->
+                <select id="langSelect" onchange="onLanguageChange()" class="bg-amber-50 border-2 border-amber-300 text-amber-900 text-xs sm:text-sm font-extrabold px-3 py-2 rounded-2xl cursor-pointer">
+                    <option value="English">English</option>
+                    <option value="Hindi">हिंदी (Hindi)</option>
+                </select>
+
+                <button onclick="triggerEmergencyHelp()" class="bg-rose-600 hover:bg-rose-700 text-white font-extrabold px-3 sm:px-5 py-2.5 rounded-2xl text-xs sm:text-sm flex items-center gap-1.5 shadow-lg shadow-rose-600/30 transition">
+                    <i data-lucide="phone-call" class="w-5 h-5"></i>
+                    <span id="headerCallBtnText">Call Caregiver</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ==================== SIDE DRAWER MENU ==================== -->
+    <div id="drawerOverlay" onclick="toggleMenu()" class="fixed inset-0 bg-slate-900/50 z-50 hidden backdrop-blur-sm transition-opacity"></div>
+    
+    <aside id="menuDrawer" class="fixed top-0 left-0 h-full w-80 sm:w-96 bg-white z-50 shadow-2xl -translate-x-full flex flex-col justify-between overflow-y-auto">
+        <div class="p-6 space-y-6">
+            <div class="flex items-center justify-between border-b-2 border-slate-100 pb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-amber-500 rounded-2xl flex items-center justify-center text-white font-black text-xl">
+                        JP
+                    </div>
+                    <div>
+                        <h2 id="menuUserName" class="text-lg font-black text-slate-900">John Paswan</h2>
+                        <p id="menuUserMeta" class="text-xs font-bold text-slate-500">Age: 72 • Blood: O+</p>
+                    </div>
+                </div>
+                <button onclick="toggleMenu()" class="p-2 text-slate-400 hover:text-slate-800 rounded-xl">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+
+            <nav class="space-y-3">
+                <button onclick="openModal('profileModal')" class="w-full flex items-center gap-4 p-3.5 rounded-2xl bg-slate-50 hover:bg-amber-50 text-slate-800 hover:text-amber-900 font-extrabold text-sm transition">
+                    <i data-lucide="user" class="w-6 h-6 text-amber-500"></i>
+                    <span id="navProfileText">Profile & Medical Details</span>
+                </button>
+
+                <button onclick="openModal('settingsModal')" class="w-full flex items-center gap-4 p-3.5 rounded-2xl bg-slate-50 hover:bg-amber-50 text-slate-800 hover:text-amber-900 font-extrabold text-sm transition">
+                    <i data-lucide="settings" class="w-6 h-6 text-blue-500"></i>
+                    <span id="navSettingsText">App & Voice Settings</span>
+                </button>
+
+                <button onclick="openModal('contactModal')" class="w-full flex items-center gap-4 p-3.5 rounded-2xl bg-slate-50 hover:bg-amber-50 text-slate-800 hover:text-amber-900 font-extrabold text-sm transition">
+                    <i data-lucide="headphones" class="w-6 h-6 text-emerald-500"></i>
+                    <span id="navContactText">Contact Doctors & Caregivers</span>
+                </button>
+
+                <button onclick="openModal('guideModal')" class="w-full flex items-center gap-4 p-3.5 rounded-2xl bg-slate-50 hover:bg-amber-50 text-slate-800 hover:text-amber-900 font-extrabold text-sm transition">
+                    <i data-lucide="help-circle" class="w-6 h-6 text-purple-500"></i>
+                    <span id="navGuideText">How PolyBot Works</span>
+                </button>
+            </nav>
+        </div>
+
+        <div class="p-6 border-t-2 border-slate-100 bg-slate-50 space-y-3">
+            <button onclick="triggerEmergencyHelp()" class="w-full py-3 bg-rose-600 text-white font-extrabold rounded-2xl flex items-center justify-center gap-2 shadow-md">
+                <i data-lucide="phone-call" class="w-5 h-5"></i>
+                <span id="drawerEmergencyBtnText">Emergency Call Line</span>
+            </button>
+            <p id="versionTag" class="text-[11px] text-center font-bold text-slate-400">PolySafe Care v2.5 • Voice Companion Active</p>
+        </div>
+    </aside>
+
+    <!-- FLOATING CHATBOT BUTTON -->
+    <button id="floatingChatBtn" onclick="scrollToChatbot()" class="fixed bottom-6 right-6 z-40 bg-emerald-600 hover:bg-emerald-700 text-white p-4 rounded-full shadow-2xl flex items-center gap-3 border-4 border-white transition transform hover:scale-105">
+        <i data-lucide="bot" class="w-8 h-8"></i>
+        <span id="floatingBtnText" class="text-sm font-extrabold hidden md:inline pr-2">Talk to PolyBot Voice</span>
+    </button>
+
+    <!-- ==================== MAIN CONTENT ==================== -->
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 py-6 w-full flex-1 space-y-6">
+
+        <!-- SAFETY ALERT BANNER -->
+        <div id="cautionAlertBox" class="high-alert-card p-6 sm:p-8 rounded-3xl space-y-4">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b-2 border-rose-200 pb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 bg-rose-600 text-white rounded-2xl flex items-center justify-center">
+                        <i data-lucide="shield-alert" class="w-8 h-8"></i>
+                    </div>
+                    <div>
+                        <span id="riskBadge" class="px-3 py-1 bg-rose-700 text-white font-black text-xs rounded-md uppercase tracking-widest">
+                            CRITICAL SAFETY ALERT
+                        </span>
+                        <h2 id="alertHeadline" class="text-xl sm:text-2xl font-black text-rose-950 mt-1">
+                            WARFARIN + CRANBERRY JUICE DETECTED
+                        </h2>
+                    </div>
+                </div>
+
+                <button onclick="readAlertVoice()" class="flex items-center gap-2 px-5 py-3 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl text-sm font-extrabold shadow-md transition">
+                    <i data-lucide="volume-2" class="w-6 h-6"></i>
+                    <span id="readAlertBtnText">Read Warning</span>
+                </button>
+            </div>
+
+            <p id="alertBodyText" class="text-base sm:text-lg font-bold text-rose-900 leading-relaxed">
+                🚨 <strong>DO NOT DRINK CRANBERRY JUICE!</strong> Drinking Cranberry Juice with Warfarin increases your risk of severe internal bleeding. Avoid cranberry juice completely.
+            </p>
+        </div>
+
+        <!-- DYNAMIC KNOWLEDGE GRAPH VISUALIZER -->
+        <div class="senior-card p-5 sm:p-6 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b-2 border-slate-100 pb-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-indigo-100 text-indigo-700 rounded-xl flex items-center justify-center">
+                        <i data-lucide="network" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h2 id="graphTitle" class="text-lg font-extrabold text-slate-900">Drug-Drug & Drug-Food Knowledge Graph</h2>
+                        <p id="graphSubtitle" class="text-xs sm:text-sm text-slate-600 font-medium">Real-time interaction mapping with severity links from backend engine</p>
+                    </div>
+                </div>
+
+                <button onclick="requestBackendInteractions()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black rounded-xl transition flex items-center gap-2 shadow-md">
+                    <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                    <span id="reevaluateBtnText">Re-evaluate Graph</span>
+                </button>
+            </div>
+
+            <!-- Canvas Container -->
+            <div class="bg-slate-900 rounded-2xl p-4 relative overflow-hidden flex flex-col items-center justify-center min-h-[280px] border-2 border-slate-800">
+                <canvas id="interactionCanvas" width="750" height="260" class="w-full max-w-full h-auto"></canvas>
+                
+                <div id="graphLegend" class="flex flex-wrap gap-4 text-xs font-extrabold text-slate-300 mt-3 pt-2 border-t border-slate-800 w-full justify-center">
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-400"></span> <span id="legendMed">Medicine Node</span></span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-amber-400"></span> <span id="legendFood">Food/Diet Node</span></span>
+                    <span class="flex items-center gap-1.5"><span class="w-3.5 h-1 bg-rose-500 inline-block"></span> <span id="legendHigh">High Severity</span></span>
+                    <span class="flex items-center gap-1.5"><span class="w-3.5 h-1 bg-amber-500 inline-block"></span> <span id="legendMod">Moderate Severity</span></span>
+                    <span class="flex items-center gap-1.5"><span class="w-3.5 h-1 bg-emerald-500 inline-block"></span> <span id="legendSafe">Safe / No Clashing</span></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+            <!-- LEFT COLUMN: SCANNER & CHECKLIST -->
+            <div class="lg:col-span-7 space-y-6">
+
+                <!-- Prescription Scanner -->
+                <div class="senior-card p-5 sm:p-6 space-y-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-blue-100 text-blue-700 rounded-xl flex items-center justify-center">
+                            <i data-lucide="camera" class="w-6 h-6"></i>
+                        </div>
+                        <div>
+                            <h2 id="scannerTitle" class="text-lg font-extrabold text-slate-900">Prescription OCR Scanner</h2>
+                            <p id="scannerSubtitle" class="text-xs sm:text-sm text-slate-600 font-medium">Scan prescription to import medicines into checklist & interaction graph</p>
+                        </div>
+                    </div>
+
+                    <input type="file" id="prescriptionFileInput" accept="image/*" class="hidden" onchange="uploadPrescriptionFile(event)">
+
+                    <div onclick="document.getElementById('prescriptionFileInput').click()" class="border-3 border-dashed border-slate-300 hover:border-amber-500 bg-slate-50 hover:bg-amber-50/40 rounded-2xl p-6 text-center cursor-pointer transition flex flex-col items-center justify-center gap-3">
+                        <div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center shadow-inner">
+                            <i data-lucide="upload-cloud" class="w-9 h-9"></i>
+                        </div>
+                        <div>
+                            <p id="uploadTitle" class="text-base font-extrabold text-slate-800">Tap to Upload & Scan Prescription</p>
+                            <p id="uploadSubtitle" class="text-xs sm:text-sm text-slate-500 mt-0.5">Supports doctor notes and pill box photos</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Medicine Checklist -->
+                <div class="senior-card p-5 sm:p-6 space-y-5">
+                    <div class="flex items-center justify-between border-b-2 border-slate-100 pb-3">
+                        <div>
+                            <h2 id="checklistTitle" class="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+                                <i data-lucide="check-square" class="w-6 h-6 text-amber-500"></i> Daily Schedule & Pending Cautions
+                            </h2>
+                            <p id="checklistSubtitle" class="text-xs text-slate-500 font-bold">Mark off pills when taken. Voice narrator updates automatically!</p>
+                        </div>
+                        <span id="checklistProgress" class="text-xs sm:text-sm font-black bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full">
+                            0 / 3 Taken
+                        </span>
+                    </div>
+
+                    <div id="medicineChecklist" class="space-y-4">
+                        <!-- Populated dynamically -->
+                    </div>
+
+                    <div class="pt-4 border-t-2 border-slate-100 space-y-3">
+                        <h3 id="addMedHeader" class="text-xs font-black uppercase tracking-wider text-slate-400">Add Medicine or Food Item</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                            <input id="addMedName" type="text" placeholder="Name (e.g. Aspirin)" class="px-3 py-2 text-xs font-bold bg-slate-50 border-2 border-slate-200 rounded-xl">
+                            <input id="addMedTimes" type="text" placeholder="Times daily" class="px-3 py-2 text-xs font-bold bg-slate-50 border-2 border-slate-200 rounded-xl">
+                            <input id="addMedPills" type="text" placeholder="Pills per dose & Timing" class="px-3 py-2 text-xs font-bold bg-slate-50 border-2 border-slate-200 rounded-xl">
+                        </div>
+                        <button onclick="addManualMedicine()" class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold rounded-xl transition flex items-center justify-center gap-1.5">
+                            <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                            <span id="addMedBtnText">Add Item to Schedule & Narrator</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN: CHATBOT & DOUBT RESOLUTION -->
+            <div id="chatbotSection" class="lg:col-span-5 flex flex-col">
+                <div class="senior-card p-5 flex flex-col h-full min-h-[520px] justify-between space-y-4">
+                    
+                    <div class="flex items-center justify-between border-b-2 border-slate-100 pb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 bg-emerald-500 rounded-2xl flex items-center justify-center text-white shadow-md">
+                                <i data-lucide="bot" class="w-7 h-7"></i>
+                            </div>
+                            <div>
+                                <h3 id="botHeaderTitle" class="text-base font-extrabold text-slate-900">PolyBot Voice Companion</h3>
+                                <p id="botHeaderStatus" class="text-xs font-bold text-emerald-600 flex items-center gap-1">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span> Voice Assistant Active
+                                </p>
+                            </div>
+                        </div>
+
+                        <button onclick="clearChat()" class="text-slate-400 hover:text-slate-600 p-1" title="Clear Chat">
+                            <i data-lucide="rotate-ccw" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+
+                    <div id="chatHistory" class="flex-1 space-y-3 overflow-y-auto pr-1 max-h-[380px]">
+                        <div class="chat-bubble-bot p-4 rounded-2xl text-xs sm:text-sm font-semibold space-y-2">
+                            <p id="chatWelcomeTitle" class="font-bold text-emerald-900 flex items-center gap-1.5">
+                                <i data-lucide="smile" class="w-5 h-5 text-emerald-600"></i> Hello John! I am PolyBot.
+                            </p>
+                            <p id="chatWelcomeSub">I am listening! Ask me to repeat your pending medicines, clashing foods, or any doubt you have!</p>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 pt-2 border-t border-slate-100">
+                        <button id="quickBtn1" onclick="sendQuickPrompt('Please repeat my pending medicines!')" class="text-xs font-bold bg-amber-100 hover:bg-amber-200 text-amber-900 px-3 py-1.5 rounded-xl transition">
+                            🔁 Repeat my schedule
+                        </button>
+                        <button id="quickBtn2" onclick="sendQuickPrompt('When should I take Warfarin and with what food?')" class="text-xs font-bold bg-emerald-100 hover:bg-emerald-200 text-emerald-900 px-3 py-1.5 rounded-xl transition">
+                            💊 When to eat Warfarin?
+                        </button>
+                        <button id="quickBtn3" onclick="sendQuickPrompt('Can I drink Cranberry Juice with Warfarin?')" class="text-xs font-bold bg-rose-100 hover:bg-rose-200 text-rose-900 px-3 py-1.5 rounded-xl transition">
+                            🥤 Cranberry juice caution?
+                        </button>
+                    </div>
+
+                    <div class="flex items-center gap-2 pt-1">
+                        <input id="userChatInput" type="text" onkeypress="handleKeyPress(event)" placeholder="Ask any doubt or request repetition..." class="flex-1 px-4 py-3 text-xs sm:text-sm font-bold bg-slate-50 border-2 border-slate-200 rounded-2xl focus:outline-none focus:border-emerald-500">
+                        
+                        <button onclick="triggerVoiceInput()" id="micBtn" class="p-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl transition" title="Voice Search">
+                            <i data-lucide="mic" class="w-5 h-5"></i>
+                        </button>
+
+                        <button onclick="sendMessage()" class="p-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl shadow-md transition">
+                            <i data-lucide="send" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- MODALS -->
+    <div id="profileModal" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 border-2 border-slate-200 shadow-2xl">
+            <div class="flex items-center justify-between border-b-2 border-slate-100 pb-3">
+                <h3 id="profileModalTitle" class="text-xl font-black text-slate-900 flex items-center gap-2">
+                    <i data-lucide="user" class="w-6 h-6 text-amber-500"></i> Senior Patient Profile
+                </h3>
+                <button onclick="closeModal('profileModal')" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <div class="space-y-4 text-xs sm:text-sm font-bold">
+                <div>
+                    <label id="lblFullName" class="text-slate-500 block mb-1">Full Name</label>
+                    <input id="profName" type="text" value="John Paswan" class="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label id="lblAge" class="text-slate-500 block mb-1">Age</label>
+                        <input id="profAge" type="number" value="72" class="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl">
+                    </div>
+                    <div>
+                        <label id="lblBlood" class="text-slate-500 block mb-1">Blood Group</label>
+                        <input id="profBlood" type="text" value="O Positive" class="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl">
+                    </div>
+                </div>
+                <div>
+                    <label id="lblPhysician" class="text-slate-500 block mb-1">Primary Care Physician</label>
+                    <input id="profDoctor" type="text" value="Dr. Ramesh Sharma (Cardiologist)" class="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl">
+                </div>
+            </div>
+            <button onclick="saveProfile()" id="saveProfileBtnText" class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-black text-sm rounded-xl">
+                Save Profile Details
+            </button>
+        </div>
+    </div>
+
+    <div id="settingsModal" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 border-2 border-slate-200 shadow-2xl">
+            <div class="flex items-center justify-between border-b-2 border-slate-100 pb-3">
+                <h3 id="settingsModalTitle" class="text-xl font-black text-slate-900 flex items-center gap-2">
+                    <i data-lucide="settings" class="w-6 h-6 text-blue-500"></i> App & Voice Settings
+                </h3>
+                <button onclick="closeModal('settingsModal')" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <div class="space-y-4 text-xs sm:text-sm font-extrabold text-slate-800">
+                <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl">
+                    <span id="lblAutoVoice">Auto-Voice Briefing on App Launch</span>
+                    <input type="checkbox" id="autoVoiceToggle" checked class="w-5 h-5 text-emerald-600">
+                </div>
+                <div class="space-y-1">
+                    <label id="lblVoiceSpeed" class="text-slate-500 block">Voice Reading Speed</label>
+                    <input type="range" id="speechSpeed" min="0.5" max="1.2" step="0.1" value="0.85" class="w-full">
+                </div>
+            </div>
+            <button onclick="closeModal('settingsModal')" id="settingsDoneBtnText" class="w-full py-3 bg-slate-900 text-white font-black text-sm rounded-xl">
+                Done
+            </button>
+        </div>
+    </div>
+
+    <div id="contactModal" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 border-2 border-slate-200 shadow-2xl">
+            <div class="flex items-center justify-between border-b-2 border-slate-100 pb-3">
+                <h3 id="contactModalTitle" class="text-xl font-black text-slate-900 flex items-center gap-2">
+                    <i data-lucide="headphones" class="w-6 h-6 text-emerald-500"></i> Emergency Support Contacts
+                </h3>
+                <button onclick="closeModal('contactModal')" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <div class="space-y-3">
+                <a href="tel:108" class="flex items-center justify-between p-4 bg-rose-50 border-2 border-rose-200 rounded-2xl text-rose-950 font-black">
+                    <span id="lblAmbulance">🚑 Emergency Ambulance</span>
+                    <span id="lblCall108" class="underline">Call 108</span>
+                </a>
+                <a href="tel:+919876543210" class="flex items-center justify-between p-4 bg-amber-50 border-2 border-amber-200 rounded-2xl text-amber-950 font-black">
+                    <span id="lblCaregiver">📞 Primary Caregiver</span>
+                    <span id="lblCallSon" class="underline">Call Son</span>
+                </a>
+            </div>
+            <button onclick="closeModal('contactModal')" id="contactCloseBtnText" class="w-full py-3 bg-slate-900 text-white font-black text-sm rounded-xl">
+                Close
+            </button>
+        </div>
+    </div>
+
+    <div id="guideModal" class="fixed inset-0 bg-slate-900/60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 border-2 border-slate-200 shadow-2xl">
+            <div class="flex items-center justify-between border-b-2 border-slate-100 pb-3">
+                <h3 id="guideModalTitle" class="text-xl font-black text-slate-900 flex items-center gap-2">
+                    <i data-lucide="help-circle" class="w-6 h-6 text-purple-500"></i> Voice Narrator Guidance
+                </h3>
+                <button onclick="closeModal('guideModal')" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <div class="space-y-2 text-xs sm:text-sm font-bold text-slate-700">
+                <p id="guideRule1">• PolyBot acts as your personal AI narrator when opening the app.</p>
+                <p id="guideRule2">• Switch languages anytime between English and Hindi.</p>
+                <p id="guideRule3">• Tap microphone or talk to ask any doubt or request PolyBot to repeat instructions.</p>
+            </div>
+            <button onclick="closeModal('guideModal')" id="guideDoneBtnText" class="w-full py-3 bg-slate-900 text-white font-black text-sm rounded-xl">
+                Got It!
+            </button>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t-2 border-slate-200 py-4 text-center text-xs font-bold text-slate-500">
+        <p id="footerText">© 2026 PolySafe Care • Senior Personal Voice Companion & Knowledge Graph</p>
+    </footer>
+
+    <!-- ==================== JAVASCRIPT CONTROLLER ==================== -->
+    <script>
+    lucide.createIcons();
+
+    // COMPLETE DICTIONARY FOR FULL HINDI / ENGLISH TRANSLATION
+    const translations = {
+        "English": {
+            appTitle: "PolySafe Care",
+            appSubtitle: "Your Personal Voice Companion",
+            headerCallBtnText: "Call Caregiver",
+            
+            navProfileText: "Profile & Medical Details",
+            navSettingsText: "App & Voice Settings",
+            navContactText: "Contact Doctors & Caregivers",
+            navGuideText: "How PolyBot Works",
+            drawerEmergencyBtnText: "Emergency Call Line",
+            versionTag: "PolySafe Care v2.5 • Voice Companion Active",
+            
+            floatingBtnText: "Talk to PolyBot Voice",
+            
+            riskBadge: "CRITICAL SAFETY ALERT",
+            alertHeadline: "WARFARIN + CRANBERRY JUICE DETECTED",
+            readAlertBtnText: "Read Warning",
+            alertBodyText: "🚨 <strong>DO NOT DRINK CRANBERRY JUICE!</strong> Drinking Cranberry Juice with Warfarin increases your risk of severe internal bleeding. Avoid cranberry juice completely.",
+            
+            graphTitle: "Drug-Drug & Drug-Food Knowledge Graph",
+            graphSubtitle: "Real-time interaction mapping with severity links from backend engine",
+            reevaluateBtnText: "Re-evaluate Graph",
+            
+            legendMed: "Medicine Node",
+            legendFood: "Food/Diet Node",
+            legendHigh: "High Severity",
+            legendMod: "Moderate Severity",
+            legendSafe: "Safe / No Clashing",
+            
+            scannerTitle: "Prescription OCR Scanner",
+            scannerSubtitle: "Scan prescription to import medicines into checklist & interaction graph",
+            uploadTitle: "Tap to Upload & Scan Prescription",
+            uploadSubtitle: "Supports doctor notes and pill box photos",
+            
+            checklistTitle: "Daily Schedule & Pending Cautions",
+            checklistSubtitle: "Mark off pills when taken. Voice narrator updates automatically!",
+            addMedHeader: "Add Medicine or Food Item",
+            addMedNamePlaceholder: "Name (e.g. Aspirin)",
+            addMedTimesPlaceholder: "Times daily",
+            addMedPillsPlaceholder: "Pills per dose & Timing",
+            addMedBtnText: "Add Item to Schedule & Narrator",
+            
+            botHeaderTitle: "PolyBot Voice Companion",
+            botHeaderStatus: "Voice Assistant Active",
+            chatWelcomeTitle: "Hello John! I am PolyBot.",
+            chatWelcomeSub: "I am listening! Ask me to repeat your pending medicines, clashing foods, or any doubt you have!",
+            quickBtn1: "🔁 Repeat my schedule",
+            quickBtn2: "💊 When to eat Warfarin?",
+            quickBtn3: "🥤 Cranberry juice caution?",
+            chatPlaceholder: "Ask any doubt or request repetition...",
+            
+            profileModalTitle: "Senior Patient Profile",
+            lblFullName: "Full Name",
+            lblAge: "Age",
+            lblBlood: "Blood Group",
+            lblPhysician: "Primary Care Physician",
+            saveProfileBtnText: "Save Profile Details",
+            
+            settingsModalTitle: "App & Voice Settings",
+            lblAutoVoice: "Auto-Voice Briefing on App Launch",
+            lblVoiceSpeed: "Voice Reading Speed",
+            settingsDoneBtnText: "Done",
+            
+            contactModalTitle: "Emergency Support Contacts",
+            lblAmbulance: "🚑 Emergency Ambulance",
+            lblCall108: "Call 108",
+            lblCaregiver: "📞 Primary Caregiver",
+            lblCallSon: "Call Son",
+            contactCloseBtnText: "Close",
+            
+            guideModalTitle: "Voice Narrator Guidance",
+            guideRule1: "• PolyBot acts as your personal AI narrator when opening the app.",
+            guideRule2: "• Switch languages anytime between English and Hindi.",
+            guideRule3: "• Tap microphone or talk to ask any doubt or request PolyBot to repeat instructions.",
+            guideDoneBtnText: "Got It!",
+            
+            footerText: "© 2026 PolySafe Care • Senior Personal Voice Companion & Knowledge Graph"
+        },
+        "Hindi": {
+            appTitle: "पॉलीसेफ केयर",
+            appSubtitle: "आपका व्यक्तिगत वॉइस स्वास्थ्य साथी",
+            headerCallBtnText: "केयरगिवर को कॉल करें",
+            
+            navProfileText: "प्रोफ़ाइल और चिकित्सा विवरण",
+            navSettingsText: "ऐप और वॉइस सेटिंग्स",
+            navContactText: "डॉक्टर और केयरगिवर से संपर्क करें",
+            navGuideText: "पॉलीबॉट कैसे काम करता है",
+            drawerEmergencyBtnText: "आपातकालीन कॉल लाइन",
+            versionTag: "पॉलीसेफ केयर v2.5 • वॉइस साथी सक्रिय",
+            
+            floatingBtnText: "पॉलीबॉट वॉइस से बात करें",
+            
+            riskBadge: "गंभीर सुरक्षा चेतावनी",
+            alertHeadline: "वारफारिन + क्रैनबेरी जूस का खतरा!",
+            readAlertBtnText: "चेतावनी सुनें",
+            alertBodyText: "🚨 <strong>क्रैनबेरी जूस बिल्कुल न पिएं!</strong> वारफारिन के साथ क्रैनबेरी जूस पीने से गंभीर आंतरिक रक्तस्राव का खतरा बढ़ जाता है।",
+            
+            graphTitle: "दवा और भोजन पारस्परिक संबंध ग्राफ",
+            graphSubtitle: "बैकएंड इंजन से वास्तविक समय की दवा सुरक्षा मैपिंग",
+            reevaluateBtnText: "ग्राफ का पुनर्मूल्यांकन करें",
+            
+            legendMed: "दवा नोड",
+            legendFood: "भोजन नोड",
+            legendHigh: "उच्च खतरा",
+            legendMod: "मध्यम खतरा",
+            legendSafe: "सुरक्षित / कोई टकराव नहीं",
+            
+            scannerTitle: "प्रिस्क्रिप्शन ओसीआर स्कैनर",
+            scannerSubtitle: "दवाइयों को सूची और ग्राफ में जोड़ने के लिए पर्चा स्कैन करें",
+            uploadTitle: "पर्चा अपलोड और स्कैन करने के लिए टैप करें",
+            uploadSubtitle: "डॉक्टर के पर्चे और दवा के डिब्बे की तस्वीरों का समर्थन करता है",
+            
+            checklistTitle: "दैनिक खुराक तालिका एवं सावधानियां",
+            checklistSubtitle: "दवा लेने पर टिक करें। वॉइस नरेटर अपने आप अपडेट होगा!",
+            addMedHeader: "नई दवा या खाद्य वस्तु जोड़ें",
+            addMedNamePlaceholder: "नाम (उदा. एस्पिरिन)",
+            addMedTimesPlaceholder: "दिन में कितनी बार",
+            addMedPillsPlaceholder: "खुराक और समय",
+            addMedBtnText: "तालिका में जोड़ें",
+            
+            botHeaderTitle: "पॉलीबॉट वॉइस साथी",
+            botHeaderStatus: "वॉइस असिस्टेंट सक्रिय है",
+            chatWelcomeTitle: "नमस्ते जॉन! मैं पॉलीबॉट हूँ।",
+            chatWelcomeSub: "मैं सुन रहा हूँ! अपनी बची हुई दवाइयाँ या खाने की सावधानियाँ पूछें।",
+            quickBtn1: "🔁 मेरी दवा सूची दोहराएं",
+            quickBtn2: "💊 वारफारिन कब और कैसे लें?",
+            quickBtn3: "🥤 क्रैनबेरी जूस क्यों नहीं पीना चाहिए?",
+            chatPlaceholder: "कोई प्रश्न पूछें या निर्देश दोहराने को कहें...",
+            
+            profileModalTitle: "वरिष्ठ रोगी प्रोफ़ाइल",
+            lblFullName: "पूरा नाम",
+            lblAge: "आयु",
+            lblBlood: "रक्त समूह (Blood Group)",
+            lblPhysician: "प्राथमिक चिकित्सक (Doctor)",
+            saveProfileBtnText: "प्रोफ़ाइल विवरण सहेजें",
+            
+            settingsModalTitle: "ऐप और वॉइस सेटिंग्स",
+            lblAutoVoice: "ऐप खोलने पर ऑटो-वॉइस ब्रीफिंग",
+            lblVoiceSpeed: "बोलने की गति (Voice Speed)",
+            settingsDoneBtnText: "हो गया",
+            
+            contactModalTitle: "आपातकालीन सहायता संपर्क",
+            lblAmbulance: "🚑 आपातकालीन एम्बुलेंस",
+            lblCall108: "108 पर कॉल करें",
+            lblCaregiver: "📞 प्राथमिक केयरगिवर",
+            lblCallSon: "बेटे को कॉल करें",
+            contactCloseBtnText: "बंद करें",
+            
+            guideModalTitle: "वॉइस नरेटर मार्गदर्शिका",
+            guideRule1: "• ऐप खोलते ही पॉलीबॉट आपका व्यक्तिगत एआई नरेटर बन जाता है।",
+            guideRule2: "• आप कभी भी अंग्रेजी और हिंदी के बीच भाषा बदल सकते हैं।",
+            guideRule3: "• माइक पर टैप करके कोई भी सवाल पूछें या निर्देश दोहराने को कहें।",
+            guideDoneBtnText: "समझ गया!",
+            
+            footerText: "© 2026 पॉलीसेफ केयर • वरिष्ठ व्यक्तिगत वॉइस साथी"
+        }
+    };
+
+    let medicineSchedule = [
+        { id: 1, name: "Warfarin 5mg", timesDaily: "1 time daily", pillsPerDose: "1 pill at 6:00 PM (After Dinner)", taken: false },
+        { id: 2, name: "Aspirin 75mg", timesDaily: "1 time daily", pillsPerDose: "1 pill at 8:00 AM (After Breakfast)", taken: true },
+        { id: 3, name: "Cranberry Juice", timesDaily: "Dietary Item", pillsPerDose: "Avoid completely", taken: false }
+    ];
+
+    let activeInteractions = [];
+
+    const langVoiceMap = {
+        "English": "en-US",
+        "Hindi": "hi-IN"
+    };
+
+    function setNarratorText(text) {
+        const el = document.getElementById('narratorBannerText');
+        if (el) {
+            el.innerText = text;
+        }
+    }
+
+    // FUNCTION THAT TRANSLATES ALL UI ELEMENTS INSTANTLY
+    function applyLanguageUI(lang) {
+        const dict = translations[lang] || translations["English"];
+
+        // Top Header
+        document.getElementById('appTitle').innerText = dict.appTitle;
+        document.getElementById('appSubtitle').innerText = dict.appSubtitle;
+        document.getElementById('headerCallBtnText').innerText = dict.headerCallBtnText;
+
+        // Side Drawer
+        document.getElementById('navProfileText').innerText = dict.navProfileText;
+        document.getElementById('navSettingsText').innerText = dict.navSettingsText;
+        document.getElementById('navContactText').innerText = dict.navContactText;
+        document.getElementById('navGuideText').innerText = dict.navGuideText;
+        document.getElementById('drawerEmergencyBtnText').innerText = dict.drawerEmergencyBtnText;
+        document.getElementById('versionTag').innerText = dict.versionTag;
+
+        // Floating Button
+        document.getElementById('floatingBtnText').innerText = dict.floatingBtnText;
+
+        // Alert Box
+        document.getElementById('riskBadge').innerText = dict.riskBadge;
+        document.getElementById('alertHeadline').innerText = dict.alertHeadline;
+        document.getElementById('readAlertBtnText').innerText = dict.readAlertBtnText;
+        document.getElementById('alertBodyText').innerHTML = dict.alertBodyText;
+
+        // Graph
+        document.getElementById('graphTitle').innerText = dict.graphTitle;
+        document.getElementById('graphSubtitle').innerText = dict.graphSubtitle;
+        document.getElementById('reevaluateBtnText').innerText = dict.reevaluateBtnText;
+        document.getElementById('legendMed').innerText = dict.legendMed;
+        document.getElementById('legendFood').innerText = dict.legendFood;
+        document.getElementById('legendHigh').innerText = dict.legendHigh;
+        document.getElementById('legendMod').innerText = dict.legendMod;
+        document.getElementById('legendSafe').innerText = dict.legendSafe;
+
+        // Scanner
+        document.getElementById('scannerTitle').innerText = dict.scannerTitle;
+        document.getElementById('scannerSubtitle').innerText = dict.scannerSubtitle;
+        document.getElementById('uploadTitle').innerText = dict.uploadTitle;
+        document.getElementById('uploadSubtitle').innerText = dict.uploadSubtitle;
+
+        // Checklist
+        document.getElementById('checklistTitle').innerHTML = `<i data-lucide="check-square" class="w-6 h-6 text-amber-500"></i> ${dict.checklistTitle}`;
+        document.getElementById('checklistSubtitle').innerText = dict.checklistSubtitle;
+        document.getElementById('addMedHeader').innerText = dict.addMedHeader;
+        document.getElementById('addMedName').placeholder = dict.addMedNamePlaceholder;
+        document.getElementById('addMedTimes').placeholder = dict.addMedTimesPlaceholder;
+        document.getElementById('addMedPills').placeholder = dict.addMedPillsPlaceholder;
+        document.getElementById('addMedBtnText').innerText = dict.addMedBtnText;
+
+        // Bot Section
+        document.getElementById('botHeaderTitle').innerText = dict.botHeaderTitle;
+        document.getElementById('botHeaderStatus').innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span> ${dict.botHeaderStatus}`;
+        document.getElementById('chatWelcomeTitle').innerHTML = `<i data-lucide="smile" class="w-5 h-5 text-emerald-600"></i> ${dict.chatWelcomeTitle}`;
+        document.getElementById('chatWelcomeSub').innerText = dict.chatWelcomeSub;
+        document.getElementById('quickBtn1').innerText = dict.quickBtn1;
+        document.getElementById('quickBtn2').innerText = dict.quickBtn2;
+        document.getElementById('quickBtn3').innerText = dict.quickBtn3;
+        document.getElementById('userChatInput').placeholder = dict.chatPlaceholder;
+
+        // Modals
+        document.getElementById('profileModalTitle').innerHTML = `<i data-lucide="user" class="w-6 h-6 text-amber-500"></i> ${dict.profileModalTitle}`;
+        document.getElementById('lblFullName').innerText = dict.lblFullName;
+        document.getElementById('lblAge').innerText = dict.lblAge;
+        document.getElementById('lblBlood').innerText = dict.lblBlood;
+        document.getElementById('lblPhysician').innerText = dict.lblPhysician;
+        document.getElementById('saveProfileBtnText').innerText = dict.saveProfileBtnText;
+
+        document.getElementById('settingsModalTitle').innerHTML = `<i data-lucide="settings" class="w-6 h-6 text-blue-500"></i> ${dict.settingsModalTitle}`;
+        document.getElementById('lblAutoVoice').innerText = dict.lblAutoVoice;
+        document.getElementById('lblVoiceSpeed').innerText = dict.lblVoiceSpeed;
+        document.getElementById('settingsDoneBtnText').innerText = dict.settingsDoneBtnText;
+
+        document.getElementById('contactModalTitle').innerHTML = `<i data-lucide="headphones" class="w-6 h-6 text-emerald-500"></i> ${dict.contactModalTitle}`;
+        document.getElementById('lblAmbulance').innerText = dict.lblAmbulance;
+        document.getElementById('lblCall108').innerText = dict.lblCall108;
+        document.getElementById('lblCaregiver').innerText = dict.lblCaregiver;
+        document.getElementById('lblCallSon').innerText = dict.lblCallSon;
+        document.getElementById('contactCloseBtnText').innerText = dict.contactCloseBtnText;
+
+        document.getElementById('guideModalTitle').innerHTML = `<i data-lucide="help-circle" class="w-6 h-6 text-purple-500"></i> ${dict.guideModalTitle}`;
+        document.getElementById('guideRule1').innerText = dict.guideRule1;
+        document.getElementById('guideRule2').innerText = dict.guideRule2;
+        document.getElementById('guideRule3').innerText = dict.guideRule3;
+        document.getElementById('guideDoneBtnText').innerText = dict.guideDoneBtnText;
+
+        // Footer
+        document.getElementById('footerText').innerText = dict.footerText;
+
+        lucide.createIcons();
+    }
+
+    // Dynamic Language Change Action
+    function onLanguageChange() {
+        const lang = document.getElementById('langSelect').value;
+        
+        // 1. Instantly update all UI text
+        applyLanguageUI(lang);
+
+        // 2. Announce language switch and trigger immediate voice briefing in chosen language
+        narrateUserAction("language_changed", { new_language: lang });
+        triggerNarratorBriefing();
+    }
+
+    // CONTINUOUS ACTION NARRATOR ENGINE
+    async function narrateUserAction(actionType, details = {}) {
+        const lang = document.getElementById('langSelect').value;
+        try {
+            const res = await fetch('/api/narrate-action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action_type: actionType, details: details, language: lang })
+            });
+            const data = await res.json();
+            if (data.success && data.narration) {
+                setNarratorText(`🎙️ "${data.narration}"`);
+                speakText(data.narration, lang);
+            }
+        } catch (e) {
+            console.log("Action narration fallback");
+        }
+    }
+
+    function toggleMenu() {
+        const drawer = document.getElementById('menuDrawer');
+        const overlay = document.getElementById('drawerOverlay');
+        if (drawer.classList.contains('-translate-x-full')) {
+            drawer.classList.remove('-translate-x-full');
+            overlay.classList.remove('hidden');
+            narrateUserAction("open_menu", { menu: "Main Navigation Drawer" });
+        } else {
+            drawer.classList.add('-translate-x-full');
+            overlay.classList.add('hidden');
+        }
+    }
+
+    function openModal(id) {
+        toggleMenu();
+        document.getElementById(id).classList.remove('hidden');
+        narrateUserAction("open_modal", { modal_id: id });
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).classList.add('hidden');
+        narrateUserAction("close_modal", { modal_id: id });
+    }
+
+    function saveProfile() {
+        const name = document.getElementById('profName').value;
+        document.getElementById('menuUserName').innerText = name;
+        closeModal('profileModal');
+        narrateUserAction("save_profile", { name: name });
+        triggerNarratorBriefing();
+    }
+
+    function renderChecklist() {
+        const container = document.getElementById('medicineChecklist');
+        container.innerHTML = '';
+        let takenCount = 0;
+        const lang = document.getElementById('langSelect').value;
+
+        medicineSchedule.forEach(med => {
+            if (med.taken) takenCount++;
+
+            const card = document.createElement('div');
+            card.className = `p-4 rounded-2xl border-2 transition flex items-center justify-between ${med.taken ? 'bg-emerald-50/70 border-emerald-300' : 'bg-slate-50 border-slate-200'}`;
+            
+            card.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <input type="checkbox" onchange="toggleMedCheck(${med.id})" ${med.taken ? 'checked' : ''} class="w-6 h-6 mt-1 rounded-lg text-emerald-600 border-2 border-slate-300 cursor-pointer">
+                    <div>
+                        <p class="text-base font-extrabold ${med.taken ? 'line-through text-slate-400' : 'text-slate-900'}">${med.name}</p>
+                        <div class="flex flex-wrap gap-2 text-xs font-extrabold mt-1">
+                            <span class="bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded-md">🔄 ${med.timesDaily}</span>
+                            <span class="bg-blue-100 text-blue-900 px-2.5 py-0.5 rounded-md">💊 ${med.pillsPerDose}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button onclick="triggerReminderAlarm('${med.name}')" class="p-2 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded-xl text-xs font-bold" title="Test Reminder Alarm">
+                        <i data-lucide="bell" class="w-4 h-4"></i>
+                    </button>
+                    <button onclick="deleteMedSchedule(${med.id})" class="p-2 text-slate-400 hover:text-rose-600">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+
+        const labelTaken = lang === "Hindi" ? "ली गई" : "Taken";
+        document.getElementById('checklistProgress').innerText = `${takenCount} / ${medicineSchedule.length} ${labelTaken}`;
+        lucide.createIcons();
+    }
+
+    function toggleMedCheck(id) {
+        const item = medicineSchedule.find(m => m.id === id);
+        if (item) {
+            item.taken = !item.taken;
+            renderChecklist();
+            narrateUserAction(item.taken ? "marked_medicine_taken" : "marked_medicine_pending", { medicine: item.name });
+        }
+    }
+
+    function deleteMedSchedule(id) {
+        const item = medicineSchedule.find(m => m.id === id);
+        medicineSchedule = medicineSchedule.filter(m => m.id !== id);
+        renderChecklist();
+        requestBackendInteractions();
+        if (item) narrateUserAction("deleted_medicine", { medicine: item.name });
+    }
+
+    function addManualMedicine() {
+        const name = document.getElementById('addMedName').value.trim();
+        const times = document.getElementById('addMedTimes').value.trim();
+        const pills = document.getElementById('addMedPills').value.trim();
+
+        if (name) {
+            medicineSchedule.push({
+                id: Date.now(),
+                name: name,
+                timesDaily: times || "1 time daily",
+                pillsPerDose: pills || "1 dose",
+                taken: false
+            });
+            document.getElementById('addMedName').value = '';
+            document.getElementById('addMedTimes').value = '';
+            document.getElementById('addMedPills').value = '';
+            renderChecklist();
+            requestBackendInteractions();
+            narrateUserAction("added_medicine", { medicine: name });
+        }
+    }
+
+    async function uploadPrescriptionFile(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        narrateUserAction("started_prescription_scan", {});
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const res = await fetch('/api/scan-prescription', { method: 'POST', body: formData });
+            const data = await res.json();
+
+            if (data.success && data.medicines) {
+                data.medicines.forEach(m => {
+                    medicineSchedule.push({
+                        id: Date.now() + Math.random(),
+                        name: `${m.name} (${m.dose})`,
+                        timesDaily: m.frequency || "1 time daily",
+                        pillsPerDose: `${m.pills_per_dose || '1 tab'} (${m.when_to_eat || 'After food'})`,
+                        taken: false
+                    });
+                });
+                renderChecklist();
+                requestBackendInteractions();
+                narrateUserAction("completed_prescription_scan", { count: data.medicines.length });
+            }
+        } catch (err) {
+            alert("OCR Scan Error.");
+        }
+    }
+
+    // BRIEFING IN SELECTED LANGUAGE
+    async function triggerNarratorBriefing() {
+        const lang = document.getElementById('langSelect').value;
+        const patientName = document.getElementById('profName').value || "John";
+
+        try {
+            const res = await fetch('/api/narrator-greeting', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    patient_name: patientName,
+                    medicines: medicineSchedule,
+                    language: lang
+                })
+            });
+
+            const data = await res.json();
+            if (data.success && data.greeting) {
+                setNarratorText(`💬 "${data.greeting}"`);
+                speakText(data.greeting, lang);
+                appendChatMessage(data.greeting, 'bot');
+            }
+        } catch (err) {
+            console.log("Narrator briefing fallback");
+        }
+    }
+
+    function speakText(text, language = "English") {
+        if (!document.getElementById('autoVoiceToggle').checked) return;
+        window.speechSynthesis.cancel();
+
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.lang = langVoiceMap[language] || 'en-US';
+        msg.rate = parseFloat(document.getElementById('speechSpeed').value || 0.85);
+
+        window.speechSynthesis.speak(msg);
+    }
+
+    async function requestBackendInteractions() {
+        const medList = medicineSchedule.map(m => m.name);
+
+        try {
+            const res = await fetch('/api/check-interactions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ medicines: medList })
+            });
+            const result = await res.json();
+
+            if (result.success && result.data) {
+                activeInteractions = result.data.interactions || [];
+
+                if (activeInteractions.length > 0) {
+                    document.getElementById('alertHeadline').innerText = `${activeInteractions[0].pair.toUpperCase()} RISK DETECTED`;
+                    document.getElementById('alertBodyText').innerText = `🚨 ${activeInteractions[0].description} Recommendation: ${activeInteractions[0].recommendation}`;
+                } else {
+                    const lang = document.getElementById('langSelect').value;
+                    document.getElementById('alertHeadline').innerText = lang === "Hindi" ? "सभी सक्रिय दवाएं सुरक्षित हैं" : "ALL ACTIVE MEDICINES SAFE";
+                    document.getElementById('alertBodyText').innerText = lang === "Hindi" ? "✅ सक्रिय दवाओं के बीच कोई गंभीर प्रतिक्रिया नहीं पाई गई।" : "✅ No severe drug-drug or drug-food clashes detected among active items.";
+                }
+            }
+        } catch (e) {
+            console.log("Standalone visualization mode");
+        }
+
+        drawKnowledgeGraph();
+    }
+
+    function drawKnowledgeGraph() {
+        const canvas = document.getElementById('interactionCanvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const total = medicineSchedule.length;
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const radiusX = Math.min(canvas.width / 2.8, 220);
+        const radiusY = Math.min(canvas.height / 2.8, 85);
+
+        const nodes = medicineSchedule.map((m, idx) => {
+            const angle = (idx / total) * Math.PI * 2 - Math.PI / 2;
+            const isFood = m.name.toLowerCase().includes('juice') || m.name.toLowerCase().includes('milk') || m.name.toLowerCase().includes('grapefruit');
+            return {
+                fullName: m.name,
+                shortName: m.name.split(' ')[0],
+                x: centerX + Math.cos(angle) * radiusX,
+                y: centerY + Math.sin(angle) * radiusY,
+                isFood: isFood
+            };
+        });
+
+        nodes.forEach((n1, i) => {
+            nodes.forEach((n2, j) => {
+                if (i < j) {
+                    ctx.beginPath();
+                    ctx.moveTo(n1.x, n1.y);
+                    ctx.lineTo(n2.x, n2.y);
+
+                    const match = activeInteractions.find(inter => {
+                        const p = inter.pair.toLowerCase();
+                        return (p.includes(n1.shortName.toLowerCase()) && p.includes(n2.shortName.toLowerCase()));
+                    });
+
+                    if (match) {
+                        ctx.strokeStyle = match.severity === 'High' ? '#EF4444' : '#F59E0B';
+                        ctx.lineWidth = match.severity === 'High' ? 4 : 2.5;
+                    } else {
+                        ctx.strokeStyle = '#10B981';
+                        ctx.lineWidth = 1.5;
+                    }
+                    ctx.stroke();
+                }
+            });
+        });
+
+        nodes.forEach(n => {
+            ctx.beginPath();
+            ctx.arc(n.x, n.y, 24, 0, Math.PI * 2);
+            ctx.fillStyle = n.isFood ? '#F59E0B' : '#10B981';
+            ctx.fill();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.stroke();
+
+            ctx.fillStyle = '#FFFFFF';
+            ctx.font = 'bold 11px Plus Jakarta Sans';
+            ctx.textAlign = 'center';
+            ctx.fillText(n.shortName, n.x, n.y + 4);
+        });
+    }
+
+    function triggerReminderAlarm(medName) {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.value = 880;
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.5);
+
+        setTimeout(() => {
+            const lang = document.getElementById('langSelect').value;
+            const reminderText = lang === "Hindi" ? `याद दिलाना: ${medName} लेने का समय हो गया है` : `Reminder: Time to take ${medName}`;
+            speakText(reminderText, lang);
+        }, 600);
+
+        alert(`⏰ REMINDER: Time to take ${medName}`);
+    }
+
+    function readAlertVoice() {
+        const text = document.getElementById('alertBodyText').innerText;
+        const lang = document.getElementById('langSelect').value;
+        speakText(text, lang);
+    }
+
+    function scrollToChatbot() {
+        document.getElementById('chatbotSection').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    async function sendMessage() {
+        const input = document.getElementById('userChatInput');
+        const text = input.value.trim();
+        if (!text) return;
+
+        appendChatMessage(text, 'user');
+        input.value = '';
+
+        try {
+            const medList = medicineSchedule.map(m => m.name);
+            const lang = document.getElementById('langSelect').value;
+
+            const res = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text, medicines: medList, language: lang })
+            });
+
+            const data = await res.json();
+            if (data.success && data.reply) {
+                appendChatMessage(data.reply, 'bot');
+                speakText(data.reply, lang);
+            } else {
+                fallbackBotReply(text);
+            }
+        } catch (err) {
+            fallbackBotReply(text);
+        }
+    }
+
+    function fallbackBotReply(query) {
+        const lang = document.getElementById('langSelect').value;
+        const reply = lang === "Hindi" ? "मैं पॉलीबॉट हूँ! आप मुझसे अपनी दवाइयों या भोजन संबंधी सावधानियों के बारे में पूछ सकते हैं।" : "I am PolyBot! You can ask me anytime to repeat your doses or explain food cautions.";
+        appendChatMessage(reply, 'bot');
+        speakText(reply, lang);
+    }
+
+    function sendQuickPrompt(promptText) {
+        document.getElementById('userChatInput').value = promptText;
+        sendMessage();
+    }
+
+    function handleKeyPress(e) {
+        if (e.key === 'Enter') sendMessage();
+    }
+
+    function appendChatMessage(message, sender) {
+        const history = document.getElementById('chatHistory');
+        const bubble = document.createElement('div');
+        
+        if (sender === 'user') {
+            bubble.className = "chat-bubble-user p-3.5 rounded-2xl text-xs sm:text-sm font-semibold ml-6 text-right";
+            bubble.innerText = message;
+        } else {
+            bubble.className = "chat-bubble-bot p-3.5 rounded-2xl text-xs sm:text-sm font-semibold mr-6 space-y-1";
+            bubble.innerHTML = `<p class="font-bold text-emerald-900">PolyBot Voice:</p><p>${message}</p>`;
+        }
+
+        history.appendChild(bubble);
+        history.scrollTop = history.scrollHeight;
+    }
+
+    function triggerVoiceInput() {
+        const lang = document.getElementById('langSelect').value;
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (!SpeechRecognition) {
+            alert("Speech recognition is not supported on this browser. Try Chrome or Edge.");
+            return;
+        }
+
+        const recognition = new SpeechRecognition();
+        recognition.lang = langVoiceMap[lang] || 'en-US';
+        recognition.interimResults = false;
+
+        recognition.onstart = function() {
+            document.getElementById('micBtn').classList.add('bg-rose-500', 'text-white', 'animate-pulse');
+        };
+
+        recognition.onresult = function(event) {
+            const speechResult = event.results[0][0].transcript;
+            document.getElementById('userChatInput').value = speechResult;
+            sendMessage();
+        };
+
+        recognition.onerror = function() {
+            alert("Could not hear voice input. Please try speaking again.");
+        };
+
+        recognition.onend = function() {
+            document.getElementById('micBtn').classList.remove('bg-rose-500', 'text-white', 'animate-pulse');
+        };
+
+        recognition.start();
+    }
+
+    function clearChat() {
+        const lang = document.getElementById('langSelect').value;
+        const dict = translations[lang] || translations["English"];
+        
+        document.getElementById('chatHistory').innerHTML = `
+            <div class="chat-bubble-bot p-4 rounded-2xl text-xs sm:text-sm font-semibold space-y-2">
+                <p class="font-bold text-emerald-900">${dict.chatWelcomeTitle}</p>
+                <p>${dict.chatWelcomeSub}</p>
+            </div>
+        `;
+    }
+
+    function triggerEmergencyHelp() {
+        narrateUserAction("triggered_emergency", {});
+        const lang = document.getElementById('langSelect').value;
+        const alertMsg = lang === "Hindi" ? "आपातकालीन कॉल सक्रिय: केयरगिवर को कॉल किया जा रहा है!" : "Emergency Call Triggered: Calling caregiver and broadcasting emergency location!";
+        alert(alertMsg);
+    }
+
+    // INITIALIZATION ON LOAD
+    window.onload = function() {
+        renderChecklist();
+        requestBackendInteractions();
+        
+        // Auto-greet on launch
+        triggerNarratorBriefing();
+
+        // Audio unlock listener
+        document.body.addEventListener('click', function initAudio() {
+            window.speechSynthesis.resume();
+            document.body.removeEventListener('click', initAudio);
+        }, { once: true });
+    };
+</script>
+</body>
+</html>
